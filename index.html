@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Enviar Doação em Kwanzas</title>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background-color: #1e293b;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    h2 { text-align: center; color: #00e676; margin-bottom: 20px; }
+    .campo { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-size: 14px; }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background-color: #0f172a;
+      color: white;
+      box-sizing: border-box;
+    }
+
+    .contador {
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #00e676;
+      border: none;
+      border-radius: 6px;
+      color: #0f172a;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover { background-color: #00c853; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Enviar Doação 💬</h2>
+    
+    <div class="campo">
+      <label>Seu Nome ou Apelido:</label>
+      <input type="text" id="nome" placeholder="Ex: Mauro">
+    </div>
+
+    <div class="campo">
+      <label>Valor da Doação (Kz):</label>
+      <input type="number" id="valor" value="500" min="500" step="100">
+    </div>
+
+    <div class="campo">
+      <label>Sua Mensagem:</label>
+      <textarea id="mensagem" rows="4" placeholder="Escreva sua mensagem..."></textarea>
+      <div class="contador">
+        Caracteres restantes: <span id="charsLeft">50</span> / Teto: <span id="maxChars">50</span>
+      </div>
+    </div>
+
+    <button onclick="enviarDoacao()">Gerar Pagamento (PayPay)</button>
+  </div>
+
+  <script>
+    // Cole a sua URL do Render abaixo entre as aspas:
+    const RENDER_URL = "https://SUA-URL-DO-RENDER.onrender.com";
+
+    const valorInput = document.getElementById('valor');
+    const mensagemInput = document.getElementById('mensagem');
+    const charsLeftSpan = document.getElementById('charsLeft');
+    const maxCharsSpan = document.getElementById('maxChars');
+
+    function atualizarLimite() {
+      const valor = parseFloat(valorInput.value) || 0;
+      const valorMinimo = 500;
+      const tetoMaximo = 300;
+
+      if (valor < valorMinimo) {
+        mensagemInput.maxLength = 0;
+        mensagemInput.disabled = true;
+        mensagemInput.placeholder = "Valor mínimo para mensagem é 500 Kz";
+        maxCharsSpan.innerText = 0;
+        charsLeftSpan.innerText = 0;
+        return;
+      }
+
+      mensagemInput.disabled = false;
+      mensagemInput.placeholder = "Escreva sua mensagem...";
+
+      let limiteCalculado = 50 + Math.floor((valor - valorMinimo) / 100) * 10;
+      let limiteFinal = Math.min(limiteCalculado, tetoMaximo);
+
+      mensagemInput.maxLength = limiteFinal;
+      maxCharsSpan.innerText = limiteFinal;
+      
+      const restantes = limiteFinal - mensagemInput.value.length;
+      charsLeftSpan.innerText = restantes;
+    }
+
+    valorInput.addEventListener('input', atualizarLimite);
+    mensagemInput.addEventListener('input', atualizarLimite);
+    atualizarLimite();
+
+    async function enviarDoacao() {
+      const nome = document.getElementById('nome').value || "Anônimo";
+      const valor = parseFloat(document.getElementById('valor').value);
+      const mensagem = document.getElementById('mensagem').value;
+
+      if (valor < 500) {
+        alert("O valor mínimo para doação é de 500 Kz.");
+        return;
+      }
+
+      try {
+        const resposta = await fetch(`${RENDER_URL}/api/criar-pagamento`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ nome, valor, mensagem })
+        });
+
+        const resultado = await resposta.json();
+
+        if (resultado.sucesso) {
+          alert(`Cobrança criada com sucesso!\n\nReferência PayPay: ${resultado.referencia}\nID: ${resultado.idTransacao}`);
+        } else {
+          alert("Erro ao gerar pagamento no PayPay.");
+        }
+      } catch (erro) {
+        console.error("Erro na requisição:", erro);
+        alert("Erro ao conectar com o servidor backend.");
+      }
+    }
+  </script>
+</body>
+</html>
