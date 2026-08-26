@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Alerta LivePix Angola - OBS</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    #alert-box {
+      display: none;
+      width: 400px;
+      margin: 50px auto;
+      background: rgba(18, 18, 24, 0.95);
+      border: 3px solid #00e676;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+      animation: popIn 0.5s ease-out;
+    }
+
+    .valor {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00e676;
+      margin-bottom: 10px;
+    }
+
+    .mensagem {
+      font-size: 18px;
+      color: #ffffff;
+      word-wrap: break-word;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="alert-box">
+    <div class="valor" id="alert-valor"></div>
+    <div class="mensagem" id="alert-mensagem"></div>
+  </div>
+
+  <script>
+    const socket = io('http://localhost:3001');
+
+    socket.on('connect', () => {
+      console.log('⚡ Conectado ao servidor de alertas!');
+    });
+
+    socket.on('nova-doacao', (dados) => {
+      const box = document.getElementById('alert-box');
+      const valorEl = document.getElementById('alert-valor');
+      const msgEl = document.getElementById('alert-mensagem');
+
+      const nome = dados.anonimo ? "Anônimo" : dados.nome;
+      valorEl.innerText = `${nome} enviou ${dados.valor} Kz!`;
+      msgEl.innerText = dados.mensagem;
+
+      box.style.display = 'block';
+
+      const textoVoz = `${nome} enviou ${dados.valor} Kwanzas. ${dados.mensagem}`;
+      const utterance = new SpeechSynthesisUtterance(textoVoz);
+      utterance.lang = 'pt-PT';
+      window.speechSynthesis.speak(utterance);
+
+      setTimeout(() => {
+        box.style.display = 'none';
+      }, 7000);
+    });
+  </script>
+</body>
+</html>
