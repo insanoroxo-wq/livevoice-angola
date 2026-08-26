@@ -88,6 +88,9 @@
   </div>
 
   <script>
+    // Cole a sua URL do Render abaixo entre as aspas:
+    const RENDER_URL = "https://SUA-URL-DO-RENDER.onrender.com";
+
     const valorInput = document.getElementById('valor');
     const mensagemInput = document.getElementById('mensagem');
     const charsLeftSpan = document.getElementById('charsLeft');
@@ -135,7 +138,7 @@
       }
 
       try {
-        const resposta = await fetch('http://localhost:3001/api/criar-pagamento', {
+        const resposta = await fetch(`${RENDER_URL}/api/criar-pagamento`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
